@@ -1,44 +1,13 @@
-# -*- coding: utf-8 -*-
-#########################################################################
-#
-# Copyright (C) 2016 OSGeo
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#########################################################################
-
 # Django settings for the GeoNode project.
 import os
-from kombu import Queue
-from geonode import __file__ as geonode_path
-from geonode import get_version
-from geonode.celery_app import app  # flake8: noqa
-import djcelery
-import dj_database_url
-
-def str2bool(v):
-        return v.lower() in ("yes", "true", "t", "1")
-
-
+from geonode.settings import *
 #
 # General Django development settings
 #
-# GeoNode Version
 
-VERSION = get_version()
+SITENAME = 'state_2c_geonode'
 
-# Defines the directory that contains the settings file as the PROJECT_ROOT
+# Defines the directory that contains the settings file as the LOCAL_ROOT
 # It is used for relative settings elsewhere.
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 GEONODE_ROOT = os.path.abspath(os.path.dirname(geonode_path))
@@ -332,6 +301,7 @@ _DEFAULT_INSTALLED_APPS = (
 ) + GEONODE_APPS
 
 INSTALLED_APPS = os.getenv('INSTALLED_APPS',_DEFAULT_INSTALLED_APPS)
+#INSTALLED_APPS = INSTALLED_APPS + ('state_2c_geonode',)
 
 
 _DEFAULT_LOGGING = {
@@ -483,12 +453,9 @@ THEME_ACCOUNT_CONTACT_EMAIL = os.getenv('THEME_ACCOUNT_CONTACT_EMAIL','admin@exa
 #
 # Test Settings
 #
+LOCAL_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-# Setting a custom test runner to avoid running the tests for
-# some problematic 3rd party apps
-TEST_RUNNER =os.getenv('TEST_RUNNER', 'django_nose.NoseTestSuiteRunner')
-
-# Arguments for the test runner
+WSGI_APPLICATION = "state_2c_geonode.wsgi.application"
 
 _DEFAULT_NOSE_ARGS = [
       '--verbosity=2',
@@ -983,62 +950,19 @@ djcelery.setup_loader()
 # Load additonal basemaps, see geonode/contrib/api_basemap/README.md
 # TODO: Before the 2.5 release, let's change the line below. Apparently it is
 # doing a circular import, we should not need to do a import * from here.
-try:
-    from geonode.contrib.api_basemaps import *
-except ImportError:
-    pass
 
-# Require users to authenticate before using Geonode
-if LOCKDOWN_GEONODE:
-    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
-        ('geonode.security.middleware.LoginRequiredMiddleware',)
+# Additional directories which hold static files
+STATICFILES_DIRS.insert(0,
+    os.path.join(LOCAL_ROOT, "static"),
+)
 
-#for windows users check if they didn't set GEOS and GDAL in local_settings.py
-#maybe they set it as a windows environment
-if os.name == 'nt':
-    if not "GEOS_LIBRARY_PATH" in locals() or not "GDAL_LIBRARY_PATH" in locals():
-        if os.environ.get("GEOS_LIBRARY_PATH", None) \
-            and os.environ.get("GDAL_LIBRARY_PATH", None):
-            GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
-            GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
-        else:
-            #maybe it will be found regardless if not it will throw 500 error
-            from django.contrib.gis.geos import GEOSGeometry
+# Location of url mappings
+ROOT_URLCONF = 'state_2c_geonode.urls'
 
-
-# define the urls after the settings are overridden
-if 'geonode.geoserver' in INSTALLED_APPS:
-    LOCAL_GEOSERVER = {
-        "source": {
-            "ptype": "gxp_wmscsource",
-            "url": OGC_SERVER['default']['PUBLIC_LOCATION'] + "wms",
-            "restUrl": "/gs/rest"
-        }
-    }
-    baselayers = MAP_BASELAYERS
-    MAP_BASELAYERS = [LOCAL_GEOSERVER]
-    MAP_BASELAYERS.extend(baselayers)
-
-
-    def get_user_url(u):
-        from django.contrib.sites.models import Site
-        s = Site.objects.get_current()
-        return "http://" + s.domain + "/profiles/" + u.username
-
-
-    _DEFAULT_ABSOLUTE_URL_OVERRIDES = {
-        'auth.user': get_user_url
-    }
-    ABSOLUTE_URL_OVERRIDES = os.getenv('ABSOLUTE_URL_OVERRIDES',_DEFAULT_ABSOLUTE_URL_OVERRIDES)
-    AUTH_PROFILE_MODULE = os.getenv('AUTH_PROFILE_MODULE','maps.Contact')
-    REGISTRATION_OPEN =  str2bool(os.getenv('REGISTRATION_OPEN', 'True'))
-
-    ACCOUNT_ACTIVATION_DAYS = int(os.getenv('ACCOUNT_ACTIVATION_DAYS','7'))
-
-    # TODO: Allow overriding with an env var
-    DB_DATASTORE = str2bool(os.getenv('DB_DATASTORE', 'True'))
-
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', ['localhost', ])
+# Location of locale files
+LOCALE_PATHS = (
+    os.path.join(LOCAL_ROOT, 'locale'),
+    ) + LOCALE_PATHS
 
 AUTH_IP_WHITELIST = []
 
@@ -1057,3 +981,5 @@ try:
     from local_settings import *  # noqa
 except ImportError:
     pass
+
+TEMPLATES[0]['DIRS'].insert(0,os.path.join(LOCAL_ROOT, "templates"))

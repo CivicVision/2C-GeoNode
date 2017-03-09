@@ -1,52 +1,9 @@
-# -*- coding: utf-8 -*-
-#########################################################################
-#
-# Copyright (C) 2016 OSGeo
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#########################################################################
 
-from django.conf.urls import include, patterns, url
-from django.conf import settings
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.conf.urls.static import static
-from geonode.sitemap import LayerSitemap, MapSitemap
+from django.conf.urls import patterns, url
 from django.views.generic import TemplateView
-from django.contrib import admin
+from .views import h_keywords
 
-import geonode.proxy.urls
-
-from geonode.api.urls import api
-from geonode.api.views import verify_token, roles, users, admin_role
-
-import autocomplete_light
-
-# Setup Django Admin
-autocomplete_light.autodiscover()
-
-admin.autodiscover()
-
-js_info_dict = {
-    'domain': 'djangojs',
-    'packages': ('geonode',)
-}
-
-sitemaps = {
-    "layer": LayerSitemap,
-    "map": MapSitemap
-}
+from geonode.urls import *
 
 urlpatterns = patterns('',
 
