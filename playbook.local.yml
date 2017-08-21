@@ -1,0 +1,11 @@
+- hosts: all
+  remote_user: ubuntu
+  vars:
+    github_user: state-hiu
+    repo_name: 2C-GeoNode
+    branch_name: master
+    app_name: state_2c_geonode
+    server_name: 192.168.33.10
+    deploy_user: ubuntu
+  roles:
+    - { role: GeoNode.geonode }
